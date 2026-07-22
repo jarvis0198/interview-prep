@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { questionsApi } from '../services/api'
 import type { PrepSession } from '../types'
 import { useNavigate } from 'react-router-dom'
-import { Building2, Calendar, ChevronRight, History, Briefcase, Trash2 } from 'lucide-react'
+import { Building2, Calendar, ChevronRight, History, Briefcase, Trash2, Mic } from 'lucide-react'
 import { SessionSkeleton } from '../components/Skeleton'
 
 export default function HistoryPage() {
@@ -98,6 +98,13 @@ export default function HistoryPage() {
                   })}
                 </p>
               </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); navigate(`/mock/${s.id}`) }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition-colors shrink-0"
+                title="Start mock interview"
+              >
+                <Mic size={13} /> Mock Interview
+              </button>
               <button
                 onClick={(e) => handleDelete(e, s.id)}
                 className="text-gray-300 hover:text-red-500 transition-colors p-1.5 rounded-lg hover:bg-red-50 opacity-0 group-hover:opacity-100"
