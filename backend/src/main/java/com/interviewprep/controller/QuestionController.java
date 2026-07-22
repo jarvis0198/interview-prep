@@ -2,6 +2,7 @@ package com.interviewprep.controller;
 
 import com.interviewprep.dto.GenerateQuestionsRequest;
 import com.interviewprep.dto.GenerateQuestionsResponse;
+import com.interviewprep.dto.MockInterviewRequest;
 import com.interviewprep.dto.QuestionDto;
 import com.interviewprep.entity.PrepSession;
 import com.interviewprep.entity.User;
@@ -28,6 +29,13 @@ public class QuestionController {
             @Valid @RequestBody GenerateQuestionsRequest req,
             @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(questionService.generateQuestions(req, user));
+    }
+
+    @PostMapping("/mock-interview")
+    public ResponseEntity<java.util.Map<String, Object>> generateMockInterview(
+            @Valid @RequestBody MockInterviewRequest req,
+            @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(questionService.generateMockInterview(req, user));
     }
 
     @GetMapping("/session/{sessionId}")

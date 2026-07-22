@@ -104,6 +104,11 @@ export const questionsApi = {
 
   getSessions: () => api.get<PrepSession[]>('/questions/sessions'),
 
+  generateMockInterview: (resumeId: number, companyName: string, targetRole: string, roundType: string) =>
+    api.post<{ sessionId: number; roundType: string }>('/questions/mock-interview', {
+      resumeId, companyName, targetRole, roundType,
+    }),
+
   deleteSession: (sessionId: number) =>
     api.delete(`/questions/sessions/${sessionId}`),
 

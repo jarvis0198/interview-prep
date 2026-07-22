@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.interviewprep.dto.GenerateQuestionsRequest;
 import com.interviewprep.dto.GenerateQuestionsResponse;
+import com.interviewprep.dto.MockInterviewRequest;
 import com.interviewprep.dto.QuestionDto;
 import com.interviewprep.entity.PrepSession;
 import com.interviewprep.entity.Question;
@@ -211,6 +212,98 @@ public class QuestionService {
         int end = text.lastIndexOf(']');
         if (start >= 0 && end >= 0) return text.substring(start, end + 1);
         return "[]";
+    }
+
+    public Map<String, Object> generateMockInterview(MockInterviewRequest req, User user) {
+        Resume resume = resumeService.getById(req.resumeId(), user);
+
+        PrepSession session = new PrepSession();
+        session.setCompanyName(req.companyName());
+        session.setTargetRole("[Mock: " + req.roundType() + "] " + (req.targetRole() != null ? req.targetRole() : ""));
+        session.setResume(resume);
+        session = sessionRepository.save(session);
+
+        String companyContext = companyKB.getRelevantContext(req.companyName(), req.targetRole(), 3);
+
+        String systemPrompt = buildMockSystemPrompt(req.roundType(), req.companyName());
+        String userMsg = """
+                Company: %s
+                Role: %s
+
+                Resume:
+                %s
+
+                %s
+                """.formatted(
+                req.companyName(),
+                req.targetRole() != null ? req.targetRole() : "Software Engineer",
+                resume.getContent(),
+                companyContext.isBlank() ? "" : "Company Context:\n" + companyContext
+        );
+
+        List<Question> questions = parseQuestions(groqService.chat(systemPrompt, userMsg),
+                Question.QuestionType.INTERVIEW, session);
+        questionRepository.saveAll(questions);
+
+        return Map.of(
+                "sessionId", session.getId(),
+                "roundType", req.roundType(),
+                "questions", questions.stream().map(QuestionDto::from).toList()
+        );
+    }
+
+    private String buildMockSystemPrompt(String roundType, String company) {
+        return switch (roundType) {
+            case "Behavioral" -> """
+                    You are a senior HR interviewer at %s conducting a behavioral interview round.
+                    Return a JSON array (no markdown) with exactly 8 questions focused entirely on behavioral scenarios.
+                    Each question must use the STAR method format.
+                    [{"category":"Behavioral","questionText":"<question>","difficulty":"<Easy/Medium/Hard>","hint":"<what strong answer covers>"}]
+                    Mix: teamwork, conflict resolution, leadership, failure/learning, achievement, adaptability.
+                    Tailor to the company's known culture and values.
+                    """.formatted(company);
+            case "Technical" -> """
+                    You are a senior software engineer at %s conducting a technical interview round.
+                    Return a JSON array (no markdown) with exactly 8 technical questions.
+                    [{"category":"Technical","questionText":"<question>","difficulty":"<Easy/Medium/Hard>","hint":"<key concepts to cover>"}]
+                    Focus on: algorithms, data structures, code design, debugging, system internals.
+                    Base questions on the candidate's resume skills. Mix Easy/Medium/Hard.
+                    """.formatted(company);
+            case "DSA" -> """
+                    You are a competitive programming interviewer at %s.
+                    Return a JSON array (no markdown) with exactly 8 DSA problem-solving questions.
+                    [{"category":"DSA","questionText":"<full problem statement with example>","difficulty":"<Easy/Medium/Hard>","hint":"<approach/pattern hint>"}]
+                    Mix patterns: arrays, strings, trees, graphs, DP, sliding window, two pointers, backtracking.
+                    Write full problem statements with input/output examples like a real OA.
+                    """.formatted(company);
+            case "System Design" -> """
+                    You are a staff engineer at %s conducting a system design interview round.
+                    Return a JSON array (no markdown) with exactly 6 system design questions.
+                    [{"category":"System Design","questionText":"<question>","difficulty":"<Medium/Hard>","hint":"<components and trade-offs to cover>"}]
+                    Include: scalability, distributed systems, databases, caching, APIs, real-world system designs.
+                    Tailor complexity to a senior engineer level.
+                    """.formatted(company);
+            case "HR" -> """
+                    You are an HR manager at %s conducting an HR screening round.
+                    Return a JSON array (no markdown) with exactly 8 HR interview questions.
+                    [{"category":"HR","questionText":"<question>","difficulty":"Easy","hint":"<what to convey>"}]
+                    Cover: motivation, salary expectations, work style, culture fit, career goals, strengths/weaknesses,
+                    notice period, why this company, relocation willingness.
+                    """.formatted(company);
+            case "Role-Specific" -> """
+                    You are a hiring manager at %s conducting a role-specific interview round.
+                    Return a JSON array (no markdown) with exactly 8 role-specific questions.
+                    [{"category":"Role-Specific","questionText":"<question>","difficulty":"<Easy/Medium/Hard>","hint":"<key points>"}]
+                    Questions must be directly tied to the candidate's resume experience, projects, and skills.
+                    Dig into their past work, technology choices, and domain knowledge.
+                    """.formatted(company);
+            default -> """
+                    You are a senior interviewer at %s conducting a full mixed interview round.
+                    Return a JSON array (no markdown) with exactly 10 questions.
+                    [{"category":"<Technical/Behavioral/HR/System Design/DSA>","questionText":"<question>","difficulty":"<Easy/Medium/Hard>","hint":"<key points>"}]
+                    Mix: 3 technical, 2 behavioral, 2 DSA, 1 system design, 1 HR, 1 role-specific.
+                    """.formatted(company);
+        };
     }
 
     public List<QuestionDto> getBySession(Long sessionId) {

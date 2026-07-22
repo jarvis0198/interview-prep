@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 
 const nav = [
   { to: '/', label: 'Home', icon: Home },
+  { to: '/mock-interview', label: 'Mock Interview', icon: Mic },
   { to: '/resume', label: 'Resume', icon: FileText },
   { to: '/study', label: 'Study Guide', icon: BookOpen },
   { to: '/flashcards', label: 'Flashcards', icon: Layers },
