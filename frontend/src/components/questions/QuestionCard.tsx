@@ -119,11 +119,13 @@ export default function QuestionCard({ question, index }: Props) {
           {showNotes ? 'Hide notes' : (notes ? 'View notes' : 'Add notes')}
           {showNotes ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
-        <button onClick={() => setShowCode(!showCode)} className={clsx('flex items-center gap-1 text-xs font-medium', showCode ? 'text-green-700 hover:text-green-900' : 'text-gray-400 hover:text-green-700')}>
-          <Code2 size={13} />
-          {showCode ? 'Hide code runner' : 'Run code'}
-          {showCode ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
-        </button>
+        {question.type === 'OA' && (
+          <button onClick={() => setShowCode(!showCode)} className={clsx('flex items-center gap-1 text-xs font-medium', showCode ? 'text-green-700 hover:text-green-900' : 'text-gray-400 hover:text-green-700')}>
+            <Code2 size={13} />
+            {showCode ? 'Hide code runner' : 'Run code'}
+            {showCode ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          </button>
+        )}
       </div>
 
       {showHint && question.hint && (
@@ -162,7 +164,7 @@ export default function QuestionCard({ question, index }: Props) {
         </div>
       )}
 
-      {showCode && (
+      {question.type === 'OA' && showCode && (
         <div className="pl-0 pt-1">
           <CodeRunner
             questionId={question.id}
