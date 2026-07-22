@@ -45,6 +45,7 @@ export interface Question {
   hint?: string
   solution?: string
   notes?: string
+  testCases?: string
   sessionId: number
 }
 

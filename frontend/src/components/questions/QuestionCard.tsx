@@ -23,6 +23,7 @@ export default function QuestionCard({ question, index }: Props) {
   const [showSolution, setShowSolution] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
   const [showCode, setShowCode] = useState(false)
+  const [codePassed, setCodePassed] = useState(false)
   const [solution, setSolution] = useState<string | null>(question.solution ?? null)
   const [notes, setNotes] = useState(question.notes ?? '')
   const [loadingSolution, setLoadingSolution] = useState(false)
@@ -163,7 +164,17 @@ export default function QuestionCard({ question, index }: Props) {
 
       {showCode && (
         <div className="pl-0 pt-1">
-          <CodeRunner questionText={question.questionText} />
+          <CodeRunner
+            questionId={question.id}
+            questionText={question.questionText}
+            onAllPassed={() => setCodePassed(true)}
+          />
+          {codePassed && (
+            <div className="mt-2 flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <CheckCircle2 size={15} className="text-green-500 shrink-0" />
+              <span className="text-xs text-green-700 font-medium">All test cases passed! Great job.</span>
+            </div>
+          )}
         </div>
       )}
     </div>

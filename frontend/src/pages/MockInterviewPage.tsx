@@ -189,7 +189,7 @@ export default function MockInterviewPage() {
         </button>
         {showCode && (
           <div className="mt-3">
-            <CodeRunner questionText={q.questionText} />
+            <CodeRunner questionId={q.id} questionText={q.questionText} />
           </div>
         )}
       </div>

@@ -96,6 +96,9 @@ export const questionsApi = {
   getSolution: (questionId: number) =>
     api.post<Question>(`/questions/${questionId}/solution`),
 
+  getTestCases: (questionId: number) =>
+    api.post<Question>(`/questions/${questionId}/test-cases`),
+
   updateNotes: (questionId: number, notes: string) =>
     api.patch<Question>(`/questions/${questionId}/notes`, { notes }),
 

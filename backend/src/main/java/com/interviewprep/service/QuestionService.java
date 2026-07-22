@@ -345,6 +345,44 @@ public class QuestionService {
         return QuestionDto.from(questionRepository.save(q));
     }
 
+    public QuestionDto getTestCases(Long questionId) {
+        Question q = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found: " + questionId));
+
+        if (q.getTestCases() != null && !q.getTestCases().isBlank()) {
+            return QuestionDto.from(q);
+        }
+
+        String system = """
+                You are an expert competitive programming judge.
+                Given a coding problem, generate exactly 5 test cases.
+                Return ONLY a JSON array, no markdown, no explanation:
+                [
+                  {
+                    "id": 1,
+                    "input": "<exact stdin input>",
+                    "expectedOutput": "<exact expected stdout, trimmed>",
+                    "description": "<what this case tests, e.g. empty input, large n, negative numbers>"
+                  }
+                ]
+                Rules:
+                - input and expectedOutput must be exact strings that can be piped to stdin/stdout
+                - Cover: basic case, edge case (empty/zero/negative), large input, multiple outputs, corner case
+                - expectedOutput must match exactly what a correct program would print (including newlines if multiple values)
+                """;
+
+        String userMsg = "Problem:\n" + q.getQuestionText();
+        String raw = groqService.chat(system, userMsg);
+
+        int start = raw.indexOf('[');
+        int end = raw.lastIndexOf(']');
+        String testCasesJson = (start >= 0 && end >= 0) ? raw.substring(start, end + 1) : "[]";
+
+        q.setTestCases(testCasesJson);
+        questionRepository.save(q);
+        return QuestionDto.from(q);
+    }
+
     public QuestionDto getSolution(Long questionId) {
         Question q = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found: " + questionId));

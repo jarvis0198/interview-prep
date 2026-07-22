@@ -36,6 +36,9 @@ public class Question {
     @Column(columnDefinition = "TEXT")
     private String notes;
 
+    @Column(name = "test_cases", columnDefinition = "TEXT")
+    private String testCases;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
     private PrepSession session;

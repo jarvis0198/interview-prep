@@ -60,6 +60,11 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getSolution(questionId));
     }
 
+    @PostMapping("/{questionId}/test-cases")
+    public ResponseEntity<QuestionDto> getTestCases(@PathVariable Long questionId) {
+        return ResponseEntity.ok(questionService.getTestCases(questionId));
+    }
+
     @PostMapping("/{questionId}/feedback")
     public ResponseEntity<java.util.Map<String, String>> getFeedback(
             @PathVariable Long questionId,

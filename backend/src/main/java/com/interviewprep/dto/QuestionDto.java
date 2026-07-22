@@ -11,6 +11,7 @@ public record QuestionDto(
         String hint,
         String solution,
         String notes,
+        String testCases,
         Long sessionId
 ) {
     public static QuestionDto from(Question q) {
@@ -23,6 +24,7 @@ public record QuestionDto(
                 q.getHint(),
                 q.getSolution(),
                 q.getNotes(),
+                q.getTestCases(),
                 q.getSession().getId()
         );
     }
