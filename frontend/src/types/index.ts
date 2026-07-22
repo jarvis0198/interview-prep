@@ -44,6 +44,7 @@ export interface Question {
   difficulty?: string
   hint?: string
   solution?: string
+  notes?: string
   sessionId: number
 }
 
@@ -64,6 +65,15 @@ export interface GenerateQuestionsResponse {
   sessionId: number
   oaQuestions: Question[]
   interviewQuestions: Question[]
+}
+
+export interface JdMatchResponse {
+  score: number
+  summary: string
+  matchedSkills: string[]
+  missingSkills: string[]
+  matchedKeywords: string[]
+  suggestions: string[]
 }
 
 export interface GithubQuestion {

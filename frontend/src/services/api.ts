@@ -81,6 +81,9 @@ export const resumeApi = {
 
   getSuggestions: (id: number) =>
     api.post<ResumeSuggestionResponse>(`/resumes/${id}/suggestions`),
+
+  matchJd: (id: number, jobDescription: string) =>
+    api.post<import('../types').JdMatchResponse>(`/resumes/${id}/jd-match`, { jobDescription }),
 }
 
 export const questionsApi = {
@@ -92,6 +95,12 @@ export const questionsApi = {
 
   getSolution: (questionId: number) =>
     api.post<Question>(`/questions/${questionId}/solution`),
+
+  updateNotes: (questionId: number, notes: string) =>
+    api.patch<Question>(`/questions/${questionId}/notes`, { notes }),
+
+  getFeedback: (questionId: number, userAnswer: string) =>
+    api.post<{ feedback: string }>(`/questions/${questionId}/feedback`, { userAnswer }),
 
   getSessions: () => api.get<PrepSession[]>('/questions/sessions'),
 

@@ -1,5 +1,5 @@
 import { NavLink, Link } from 'react-router-dom'
-import { FileText, Home, History, Brain, MessageSquare, LogOut, User, BookOpen, Building2 } from 'lucide-react'
+import { FileText, Home, History, Brain, MessageSquare, LogOut, User, BookOpen, Building2, FileSearch, Mic } from 'lucide-react'
 import clsx from 'clsx'
 import { useAuth } from '../../context/AuthContext'
 
@@ -8,6 +8,7 @@ const nav = [
   { to: '/resume', label: 'Resume', icon: FileText },
   { to: '/study', label: 'Study', icon: BookOpen },
   { to: '/companies', label: 'Companies', icon: Building2 },
+  { to: '/jd-match', label: 'JD Match', icon: FileSearch },
   { to: '/chat', label: 'Chat', icon: MessageSquare },
   { to: '/history', label: 'History', icon: History },
 ]

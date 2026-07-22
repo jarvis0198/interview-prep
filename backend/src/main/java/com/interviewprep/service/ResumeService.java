@@ -187,6 +187,42 @@ public class ResumeService {
         }
     }
 
+    public Map<String, Object> matchJobDescription(Long id, String jobDescription, User user) {
+        Resume resume = getById(id, user);
+
+        String system = """
+                You are an expert technical recruiter and career coach.
+                Compare the resume against the job description and return a JSON object (no markdown):
+                {
+                  "score": <integer 0-100>,
+                  "summary": "<2-sentence overall assessment>",
+                  "matchedSkills": ["skill1", "skill2"],
+                  "missingSkills": ["skill1", "skill2"],
+                  "matchedKeywords": ["keyword1", "keyword2"],
+                  "suggestions": ["actionable suggestion 1", "actionable suggestion 2", "actionable suggestion 3"]
+                }
+                Score 90-100: excellent match, 70-89: good match, 50-69: partial match, below 50: weak match.
+                """;
+
+        String userMsg = "JOB DESCRIPTION:\n" + jobDescription + "\n\nRESUME:\n" + resume.getContent();
+        String raw = groqService.chat(system, userMsg);
+
+        try {
+            JsonNode node = objectMapper.readTree(extractJson(raw));
+            Map<String, Object> result = new java.util.LinkedHashMap<>();
+            result.put("score", node.path("score").asInt());
+            result.put("summary", node.path("summary").asText());
+            result.put("matchedSkills", StreamSupport.stream(node.path("matchedSkills").spliterator(), false).map(JsonNode::asText).toList());
+            result.put("missingSkills", StreamSupport.stream(node.path("missingSkills").spliterator(), false).map(JsonNode::asText).toList());
+            result.put("matchedKeywords", StreamSupport.stream(node.path("matchedKeywords").spliterator(), false).map(JsonNode::asText).toList());
+            result.put("suggestions", StreamSupport.stream(node.path("suggestions").spliterator(), false).map(JsonNode::asText).toList());
+            return result;
+        } catch (Exception e) {
+            log.warn("Failed to parse JD match response: {}", e.getMessage());
+            return Map.of("score", 0, "summary", "Failed to analyze. Please try again.", "matchedSkills", List.of(), "missingSkills", List.of(), "matchedKeywords", List.of(), "suggestions", List.of());
+        }
+    }
+
     public Resume buildResume(BuildResumeRequest req, User user) {
         String systemPrompt = buildSystemPrompt(req.mode());
         String userMessage = "url".equals(req.mode()) ?

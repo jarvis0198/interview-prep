@@ -12,6 +12,8 @@ import ChatPage from './pages/ChatPage'
 import AccountPage from './pages/AccountPage'
 import StudyGuidePage from './pages/StudyGuidePage'
 import CompanyQuestionsPage from './pages/CompanyQuestionsPage'
+import JdMatchPage from './pages/JdMatchPage'
+import MockInterviewPage from './pages/MockInterviewPage'
 
 export default function App() {
   return (
@@ -33,6 +35,8 @@ export default function App() {
                   <Route path="/account" element={<AccountPage />} />
                   <Route path="/study" element={<StudyGuidePage />} />
                   <Route path="/companies" element={<CompanyQuestionsPage />} />
+                  <Route path="/jd-match" element={<JdMatchPage />} />
+                  <Route path="/mock/:sessionId" element={<MockInterviewPage />} />
                 </Routes>
               </Layout>
             </ProtectedRoute>

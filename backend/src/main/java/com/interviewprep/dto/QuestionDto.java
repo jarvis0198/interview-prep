@@ -10,6 +10,7 @@ public record QuestionDto(
         String difficulty,
         String hint,
         String solution,
+        String notes,
         Long sessionId
 ) {
     public static QuestionDto from(Question q) {
@@ -21,6 +22,7 @@ public record QuestionDto(
                 q.getDifficulty(),
                 q.getHint(),
                 q.getSolution(),
+                q.getNotes(),
                 q.getSession().getId()
         );
     }

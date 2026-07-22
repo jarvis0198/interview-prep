@@ -222,6 +222,35 @@ public class QuestionService {
         return sessionRepository.findByResumeUserOrderByCreatedAtDesc(user);
     }
 
+    public Map<String, String> getFeedback(Long questionId, String userAnswer) {
+        Question q = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found: " + questionId));
+
+        String system = """
+                You are an expert technical interview coach. Evaluate the candidate's answer.
+                Be constructive, specific, and encouraging. Structure your feedback in markdown:
+                ## Score
+                X/10 — one-line verdict.
+                ## What You Got Right
+                Bullet points of correct points.
+                ## What Could Be Better
+                Bullet points of gaps or improvements.
+                ## Model Answer
+                A concise ideal answer for reference.
+                """;
+
+        String userMsg = "Question: " + q.getQuestionText() + "\n\nCandidate's Answer: " + userAnswer;
+        String feedback = groqService.chat(system, userMsg);
+        return Map.of("feedback", feedback);
+    }
+
+    public QuestionDto updateNotes(Long questionId, String notes) {
+        Question q = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found: " + questionId));
+        q.setNotes(notes);
+        return QuestionDto.from(questionRepository.save(q));
+    }
+
     public QuestionDto getSolution(Long questionId) {
         Question q = questionRepository.findById(questionId)
                 .orElseThrow(() -> new RuntimeException("Question not found: " + questionId));

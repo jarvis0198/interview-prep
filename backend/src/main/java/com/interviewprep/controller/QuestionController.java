@@ -52,6 +52,19 @@ public class QuestionController {
         return ResponseEntity.ok(questionService.getSolution(questionId));
     }
 
+    @PostMapping("/{questionId}/feedback")
+    public ResponseEntity<java.util.Map<String, String>> getFeedback(
+            @PathVariable Long questionId,
+            @RequestBody java.util.Map<String, String> body) {
+        return ResponseEntity.ok(questionService.getFeedback(questionId, body.get("userAnswer")));
+    }
+
+    @PatchMapping("/{questionId}/notes")
+    public ResponseEntity<QuestionDto> updateNotes(@PathVariable Long questionId,
+                                                    @RequestBody java.util.Map<String, String> body) {
+        return ResponseEntity.ok(questionService.updateNotes(questionId, body.get("notes")));
+    }
+
     @GetMapping("/github-companies")
     public ResponseEntity<List<String>> getGithubCompanies() {
         return ResponseEntity.ok(companyGithubService.getCompanyList());

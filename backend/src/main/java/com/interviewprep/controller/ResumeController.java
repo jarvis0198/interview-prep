@@ -91,4 +91,11 @@ public class ResumeController {
                                                                 @AuthenticationPrincipal User user) {
         return ResponseEntity.ok(resumeService.suggestions(id, user));
     }
+
+    @PostMapping("/{id}/jd-match")
+    public ResponseEntity<Map<String, Object>> matchJd(@PathVariable Long id,
+                                                        @RequestBody Map<String, String> body,
+                                                        @AuthenticationPrincipal User user) {
+        return ResponseEntity.ok(resumeService.matchJobDescription(id, body.get("jobDescription"), user));
+    }
 }
