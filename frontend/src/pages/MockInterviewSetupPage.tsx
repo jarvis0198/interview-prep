@@ -91,8 +91,14 @@ export default function MockInterviewSetupPage() {
         selectedRound!,
       )
       navigate(`/mock/${res.data.sessionId}`)
-    } catch {
-      setError('Failed to generate mock interview. Please try again.')
+    } catch (e: any) {
+      const status = e.response?.status
+      const msg = e.response?.data?.message
+      if (status === 404) {
+        setError('Backend is still deploying. Please wait 1–2 minutes and try again.')
+      } else {
+        setError(msg || 'Failed to generate mock interview. Please try again.')
+      }
     } finally {
       setLoading(false)
     }

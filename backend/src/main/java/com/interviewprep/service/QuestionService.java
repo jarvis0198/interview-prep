@@ -218,8 +218,10 @@ public class QuestionService {
         Resume resume = resumeService.getById(req.resumeId(), user);
 
         PrepSession session = new PrepSession();
+        String roleLabel = (req.targetRole() != null && !req.targetRole().isBlank())
+                ? req.targetRole() : "Software Engineer";
         session.setCompanyName(req.companyName());
-        session.setTargetRole("[Mock: " + req.roundType() + "] " + (req.targetRole() != null ? req.targetRole() : ""));
+        session.setTargetRole("[" + req.roundType() + "] " + roleLabel);
         session.setResume(resume);
         session = sessionRepository.save(session);
 
@@ -247,8 +249,7 @@ public class QuestionService {
 
         return Map.of(
                 "sessionId", session.getId(),
-                "roundType", req.roundType(),
-                "questions", questions.stream().map(QuestionDto::from).toList()
+                "roundType", req.roundType()
         );
     }
 
