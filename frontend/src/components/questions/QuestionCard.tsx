@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
 import type { Question } from '../../types'
-import { ChevronDown, ChevronUp, Copy, Check, CheckCircle2, Circle, Lightbulb, Sparkles, StickyNote } from 'lucide-react'
+import { ChevronDown, ChevronUp, Copy, Check, CheckCircle2, Circle, Lightbulb, Sparkles, StickyNote, Code2 } from 'lucide-react'
 import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import { questionsApi } from '../../services/api'
+import CodeRunner from '../CodeRunner'
 
 const difficultyColor = {
   Easy: 'bg-green-100 text-green-700',
@@ -21,6 +22,7 @@ export default function QuestionCard({ question, index }: Props) {
   const [showHint, setShowHint] = useState(false)
   const [showSolution, setShowSolution] = useState(false)
   const [showNotes, setShowNotes] = useState(false)
+  const [showCode, setShowCode] = useState(false)
   const [solution, setSolution] = useState<string | null>(question.solution ?? null)
   const [notes, setNotes] = useState(question.notes ?? '')
   const [loadingSolution, setLoadingSolution] = useState(false)
@@ -116,6 +118,11 @@ export default function QuestionCard({ question, index }: Props) {
           {showNotes ? 'Hide notes' : (notes ? 'View notes' : 'Add notes')}
           {showNotes ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
         </button>
+        <button onClick={() => setShowCode(!showCode)} className={clsx('flex items-center gap-1 text-xs font-medium', showCode ? 'text-green-700 hover:text-green-900' : 'text-gray-400 hover:text-green-700')}>
+          <Code2 size={13} />
+          {showCode ? 'Hide code runner' : 'Run code'}
+          {showCode ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
       </div>
 
       {showHint && question.hint && (
@@ -151,6 +158,12 @@ export default function QuestionCard({ question, index }: Props) {
             />
             {savingNotes && <span className="absolute bottom-2 right-2 text-xs text-gray-400">Saving...</span>}
           </div>
+        </div>
+      )}
+
+      {showCode && (
+        <div className="pl-0 pt-1">
+          <CodeRunner questionText={question.questionText} />
         </div>
       )}
     </div>

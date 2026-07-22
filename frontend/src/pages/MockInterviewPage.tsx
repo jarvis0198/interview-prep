@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { questionsApi } from '../services/api'
 import type { Question } from '../types'
-import { Mic, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Timer, Trophy } from 'lucide-react'
+import { Mic, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Timer, Trophy, Code2 } from 'lucide-react'
 import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
+import CodeRunner from '../components/CodeRunner'
 
 const TIMER_SECONDS = 120
 
@@ -21,6 +22,7 @@ export default function MockInterviewPage() {
   const [timerActive, setTimerActive] = useState(false)
   const [answers, setAnswers] = useState<Record<number, { answer: string; feedback: string }>>({})
   const [done, setDone] = useState(false)
+  const [showCode, setShowCode] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
@@ -72,6 +74,7 @@ export default function MockInterviewPage() {
     setFeedback(answers[current + 1]?.feedback ?? null)
     setTimeLeft(TIMER_SECONDS)
     setTimerActive(false)
+    setShowCode(false)
   }
 
   const handlePrev = () => {
@@ -81,6 +84,7 @@ export default function MockInterviewPage() {
     setFeedback(answers[current - 1]?.feedback ?? null)
     setTimeLeft(TIMER_SECONDS)
     setTimerActive(false)
+    setShowCode(false)
   }
 
   const timerColor = timeLeft > 60 ? 'text-green-600' : timeLeft > 30 ? 'text-yellow-600' : 'text-red-600'
@@ -166,6 +170,27 @@ export default function MockInterviewPage() {
             className="btn-primary w-full flex items-center justify-center gap-2">
             {loadingFeedback ? <><Loader2 size={15} className="animate-spin" /> Getting feedback...</> : <><CheckCircle2 size={15} /> Submit Answer</>}
           </button>
+        )}
+      </div>
+
+      {/* Code runner toggle */}
+      <div>
+        <button
+          onClick={() => setShowCode(v => !v)}
+          className={clsx(
+            'flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors',
+            showCode
+              ? 'bg-green-50 text-green-700 border-green-200'
+              : 'bg-white text-gray-500 border-gray-200 hover:border-green-300 hover:text-green-600'
+          )}
+        >
+          <Code2 size={15} />
+          {showCode ? 'Hide Code Runner' : 'Open Code Runner'}
+        </button>
+        {showCode && (
+          <div className="mt-3">
+            <CodeRunner questionText={q.questionText} />
+          </div>
         )}
       </div>
 
