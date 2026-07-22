@@ -1,7 +1,6 @@
 package com.interviewprep.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.interviewprep.service.ExternalDataFetcher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -25,16 +24,11 @@ public class CompanyGithubService {
 
     private static final String CSV_BASE =
             "/hxu296/leetcode-company-wise-problems-2022/main/companies/";
-    private static final String GITHUB_API_URL =
-            "https://api.github.com/repos/hxu296/leetcode-company-wise-problems-2022/contents/companies";
     private static final long TTL_MS = 12 * 60 * 60 * 1000L;
 
     private final ExternalDataFetcher fetcher;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final ConcurrentHashMap<String, CacheEntry> questionCache = new ConcurrentHashMap<>();
-    private volatile List<String> companyListCache = null;
-    private volatile long companyListFetchedAt = 0L;
 
     public record GithubQuestion(
             String title,
@@ -48,34 +42,7 @@ public class CompanyGithubService {
     // ── Company list ──────────────────────────────────────────────────────────
 
     public List<String> getCompanyList() {
-        long now = System.currentTimeMillis();
-        if (companyListCache != null && (now - companyListFetchedAt) < TTL_MS) {
-            return companyListCache;
-        }
-
-        try {
-            String raw = fetcher.fetchUrl(GITHUB_API_URL);
-            if (!raw.isBlank()) {
-                JsonNode arr = objectMapper.readTree(raw);
-                List<String> companies = new ArrayList<>();
-                for (JsonNode node : arr) {
-                    String name = node.path("name").asText("");
-                    if (name.endsWith(".csv")) {
-                        companies.add(name.substring(0, name.length() - 4));
-                    }
-                }
-                companies.sort(String.CASE_INSENSITIVE_ORDER);
-                companyListCache = Collections.unmodifiableList(companies);
-                companyListFetchedAt = now;
-                return companyListCache;
-            }
-        } catch (Exception e) {
-            log.warn("Failed to fetch company list from GitHub API: {}", e.getMessage());
-        }
-
-        companyListCache = KNOWN_COMPANIES;
-        companyListFetchedAt = now;
-        return companyListCache;
+        return KNOWN_COMPANIES;
     }
 
     // ── Questions for a company ───────────────────────────────────────────────

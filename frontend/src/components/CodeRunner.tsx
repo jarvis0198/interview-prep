@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import axios from 'axios'
 import { questionsApi } from '../services/api'
 
-const PISTON_URL = 'https://emkc.org/api/v2/piston/execute'
+const CODE_RUN_URL = '/api/code/run'
 
 interface Language {
   id: string
@@ -111,7 +111,7 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
   const runSingle = useCallback(async (tc: TestCase): Promise<CaseResult> => {
     const t0 = Date.now()
     try {
-      const res = await axios.post(PISTON_URL, {
+      const res = await axios.post(CODE_RUN_URL, {
         language: lang.id,
         version: lang.version,
         files: [{ content: code }],
@@ -155,7 +155,7 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
     setCustomOutput(null)
     setCustomError(null)
     try {
-      const res = await axios.post(PISTON_URL, {
+      const res = await axios.post(CODE_RUN_URL, {
         language: lang.id,
         version: lang.version,
         files: [{ content: code }],
