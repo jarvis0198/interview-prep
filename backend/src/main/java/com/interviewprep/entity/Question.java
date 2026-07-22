@@ -30,6 +30,9 @@ public class Question {
     @Column(columnDefinition = "TEXT")
     private String hint;
 
+    @Column(columnDefinition = "TEXT")
+    private String solution;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "session_id", nullable = false)
     private PrepSession session;

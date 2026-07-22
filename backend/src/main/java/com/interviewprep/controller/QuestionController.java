@@ -47,6 +47,11 @@ public class QuestionController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{questionId}/solution")
+    public ResponseEntity<QuestionDto> getSolution(@PathVariable Long questionId) {
+        return ResponseEntity.ok(questionService.getSolution(questionId));
+    }
+
     @GetMapping("/github-companies")
     public ResponseEntity<List<String>> getGithubCompanies() {
         return ResponseEntity.ok(companyGithubService.getCompanyList());

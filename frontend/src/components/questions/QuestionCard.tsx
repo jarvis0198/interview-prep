@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import type { Question } from '../../types'
-import { ChevronDown, ChevronUp, Copy, Check, CheckCircle2, Circle } from 'lucide-react'
+import { ChevronDown, ChevronUp, Copy, Check, CheckCircle2, Circle, Lightbulb, Sparkles } from 'lucide-react'
 import clsx from 'clsx'
+import ReactMarkdown from 'react-markdown'
+import { questionsApi } from '../../services/api'
 
 const difficultyColor = {
   Easy: 'bg-green-100 text-green-700',
@@ -17,6 +19,9 @@ interface Props {
 
 export default function QuestionCard({ question, index }: Props) {
   const [showHint, setShowHint] = useState(false)
+  const [showSolution, setShowSolution] = useState(false)
+  const [solution, setSolution] = useState<string | null>(question.solution ?? null)
+  const [loadingSolution, setLoadingSolution] = useState(false)
   const [copied, setCopied] = useState(false)
   const [done, setDone] = useState(false)
 
@@ -24,6 +29,24 @@ export default function QuestionCard({ question, index }: Props) {
     await navigator.clipboard.writeText(question.questionText)
     setCopied(true)
     setTimeout(() => setCopied(false), 1800)
+  }
+
+  const handleShowSolution = async () => {
+    if (showSolution) {
+      setShowSolution(false)
+      return
+    }
+    setShowSolution(true)
+    if (solution) return
+    setLoadingSolution(true)
+    try {
+      const res = await questionsApi.getSolution(question.id)
+      setSolution(res.data.solution ?? null)
+    } catch {
+      setSolution('Failed to load solution. Please try again.')
+    } finally {
+      setLoadingSolution(false)
+    }
   }
 
   return (
@@ -70,19 +93,46 @@ export default function QuestionCard({ question, index }: Props) {
         </button>
       </div>
 
-      {question.hint && (
-        <div className="pl-8">
+      <div className="pl-8 flex flex-wrap gap-3">
+        {question.hint && (
           <button
             onClick={() => setShowHint(!showHint)}
             className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-800 font-medium"
           >
-            {showHint ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+            <Lightbulb size={13} />
             {showHint ? 'Hide hint' : 'Show hint'}
+            {showHint ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </button>
-          {showHint && (
-            <p className="mt-2 text-xs text-gray-600 bg-blue-50 border border-blue-100 rounded-lg p-3 leading-relaxed">
-              {question.hint}
-            </p>
+        )}
+        <button
+          onClick={handleShowSolution}
+          className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-800 font-medium"
+        >
+          <Sparkles size={13} />
+          {showSolution ? 'Hide solution' : 'Show solution'}
+          {showSolution ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+        </button>
+      </div>
+
+      {showHint && question.hint && (
+        <div className="pl-8">
+          <p className="text-xs text-gray-600 bg-blue-50 border border-blue-100 rounded-lg p-3 leading-relaxed">
+            {question.hint}
+          </p>
+        </div>
+      )}
+
+      {showSolution && (
+        <div className="pl-8">
+          {loadingSolution ? (
+            <div className="flex items-center gap-2 text-xs text-gray-500 bg-purple-50 border border-purple-100 rounded-lg p-3">
+              <div className="w-3 h-3 border-2 border-purple-400 border-t-transparent rounded-full animate-spin" />
+              Generating solution...
+            </div>
+          ) : (
+            <div className="text-xs bg-purple-50 border border-purple-100 rounded-lg p-3 prose prose-sm max-w-none prose-headings:text-purple-800 prose-headings:text-sm prose-code:text-purple-700 prose-code:bg-purple-100 prose-code:px-1 prose-code:rounded">
+              <ReactMarkdown>{solution ?? ''}</ReactMarkdown>
+            </div>
           )}
         </div>
       )}

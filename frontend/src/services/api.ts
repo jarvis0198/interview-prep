@@ -90,6 +90,9 @@ export const questionsApi = {
   getBySession: (sessionId: number) =>
     api.get<Question[]>(`/questions/session/${sessionId}`),
 
+  getSolution: (questionId: number) =>
+    api.post<Question>(`/questions/${questionId}/solution`),
+
   getSessions: () => api.get<PrepSession[]>('/questions/sessions'),
 
   deleteSession: (sessionId: number) =>

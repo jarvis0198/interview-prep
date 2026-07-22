@@ -43,6 +43,7 @@ export interface Question {
   questionText: string
   difficulty?: string
   hint?: string
+  solution?: string
   sessionId: number
 }
 

@@ -222,6 +222,37 @@ public class QuestionService {
         return sessionRepository.findByResumeUserOrderByCreatedAtDesc(user);
     }
 
+    public QuestionDto getSolution(Long questionId) {
+        Question q = questionRepository.findById(questionId)
+                .orElseThrow(() -> new RuntimeException("Question not found: " + questionId));
+
+        if (q.getSolution() != null && !q.getSolution().isBlank()) {
+            return QuestionDto.from(q);
+        }
+
+        String system = """
+                You are an expert software engineer and interview coach.
+                Provide a clear, concise solution to the given interview question.
+                Format your response in markdown with these sections:
+                ## Approach
+                Brief explanation of the approach.
+                ## Solution
+                Code (if applicable) with explanation.
+                ## Complexity
+                Time and space complexity (if applicable).
+                ## Key Points
+                2-3 bullet points of what interviewers look for.
+                """;
+
+        String userMsg = "Question type: " + q.getType() + "\nCategory: " + q.getCategory() +
+                "\nDifficulty: " + q.getDifficulty() + "\n\n" + q.getQuestionText();
+
+        String solution = groqService.chat(system, userMsg);
+        q.setSolution(solution);
+        questionRepository.save(q);
+        return QuestionDto.from(q);
+    }
+
     public void deleteSession(Long sessionId, User user) {
         PrepSession session = sessionRepository.findByIdWithUser(sessionId)
                 .orElseThrow(() -> new RuntimeException("Session not found: " + sessionId));
