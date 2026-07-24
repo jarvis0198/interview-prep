@@ -112,7 +112,7 @@ export default function MockInterviewPage() {
   )
 
   const q = questions[current]
-  const isOA = q.type === 'OA'
+  const isOA = q.type === 'OA' || q.category === 'DSA'
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
