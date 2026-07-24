@@ -18,7 +18,7 @@ public record SessionSummaryDto(
                 s.getId(),
                 s.getCompanyName(),
                 s.getTargetRole(),
-                s.getResume() != null ? s.getResume().getId() : null,
+                s.getResumeId(),
                 s.getCreatedAt(),
                 oaCount,
                 interviewCount
