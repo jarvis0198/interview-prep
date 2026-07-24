@@ -652,7 +652,25 @@ export default function TemplatePreview({ resume }: Props) {
         {template === 'creative' && <CreativeTemplate data={data} />}
         {template === 'college'  && <CollegeTemplate  data={data} />}
       </div>
-      <style>{`@media print{body>*{display:none!important}#resume-print-area{display:block!important;position:fixed;top:0;left:0;width:100%;padding:24px}}`}</style>
+      <style>{`
+        @media print {
+          @page { margin: 0.5in; size: A4 portrait; }
+          html, body { height: auto !important; overflow: visible !important; }
+          body > * { visibility: hidden !important; }
+          #resume-print-area, #resume-print-area * { visibility: visible !important; }
+          #resume-print-area {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            background: white !important;
+          }
+        }
+      `}</style>
     </div>
   )
 }
