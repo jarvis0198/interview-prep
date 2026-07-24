@@ -67,6 +67,7 @@ export default function ProgressPage() {
   const [sessions, setSessions] = useState<PrepSession[]>([])
   const [done, setDone] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     Promise.all([
@@ -75,11 +76,15 @@ export default function ProgressPage() {
     ]).then(([sessRes, progRes]) => {
       setSessions(sessRes.data)
       setDone(new Set(progRes.data))
-    }).catch(() => {}).finally(() => setLoading(false))
+    }).catch(() => { setError(true) }).finally(() => setLoading(false))
   }, [])
 
   if (loading) {
     return <div className="text-center py-20 text-gray-400">Loading…</div>
+  }
+
+  if (error) {
+    return <div className="text-center py-20 text-red-400">Failed to load progress data. Please try again.</div>
   }
 
   // ── Derived stats ──────────────────────────────────────────────────────────

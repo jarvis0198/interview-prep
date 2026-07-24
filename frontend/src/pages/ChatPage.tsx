@@ -31,10 +31,12 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
 
   useEffect(() => {
-    resumeApi.getAll().then((r) => {
-      setResumes(r.data)
-      if (r.data.length > 0) setSelectedId(r.data[0].id)
-    })
+    resumeApi.getAll()
+      .then((r) => {
+        setResumes(r.data)
+        if (r.data.length > 0) setSelectedId(r.data[0].id)
+      })
+      .catch(() => {})
   }, [])
 
   // Restore messages when selected resume changes
@@ -57,7 +59,7 @@ export default function ChatPage() {
 
   const send = async (text?: string) => {
     const question = (text ?? input).trim()
-    if (!question || loading) return
+    if (!question || loading || selectedId == null) return
 
     updateMessages((m) => [...m, { role: 'user', text: question }])
     setInput('')

@@ -32,10 +32,12 @@ export default function HistoryPage() {
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
     if (!confirm('Delete this session?')) return
+    const prev = sessions
+    setSessions((s) => s.filter((x) => x.id !== id))
     try {
       await questionsApi.deleteSession(id)
-      setSessions((prev) => prev.filter((s) => s.id !== id))
     } catch {
+      setSessions(prev)
       alert('Failed to delete session.')
     }
   }

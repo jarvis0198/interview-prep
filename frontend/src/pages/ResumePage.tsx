@@ -35,10 +35,12 @@ export default function ResumePage() {
   const [titleDraft, setTitleDraft] = useState('')
 
   useEffect(() => {
-    resumeApi.getAll().then((r) => {
-      setResumes(r.data)
-      if (r.data.length > 0) setActiveId(r.data[0].id)
-    })
+    resumeApi.getAll()
+      .then((r) => {
+        setResumes(r.data)
+        if (r.data.length > 0) setActiveId(r.data[0].id)
+      })
+      .catch(() => {})
   }, [])
 
   const active = resumes.find((r) => r.id === activeId)
@@ -61,10 +63,17 @@ export default function ResumePage() {
 
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this resume?')) return
-    await resumeApi.delete(id)
+    const prev = resumes
     const next = resumes.filter((r) => r.id !== id)
     setResumes(next)
     setActiveId(next[0]?.id ?? null)
+    try {
+      await resumeApi.delete(id)
+    } catch {
+      setResumes(prev)
+      setActiveId(id)
+      alert('Failed to delete resume.')
+    }
   }
 
   const handleApplySuggestions = (suggestions: string) => {

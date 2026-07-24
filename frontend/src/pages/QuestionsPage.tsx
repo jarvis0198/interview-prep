@@ -21,7 +21,9 @@ export default function QuestionsPage() {
   const [data, setData] = useState<GenerateQuestionsResponse | null>(null)
 
   useEffect(() => {
-    if (!sessionId) return
+    if (!sessionId) { setError('Invalid session.'); return }
+    const id = Number(sessionId)
+    if (isNaN(id)) { setError('Invalid session.'); return }
 
     // 1. Prefer fresh data passed via navigation state (just generated)
     const navState = location.state as GenerateQuestionsResponse | null
@@ -45,7 +47,7 @@ export default function QuestionsPage() {
     // 3. Fetch from API
     setLoading(true)
     questionsApi
-      .getBySession(Number(sessionId))
+      .getBySession(id)
       .then((res) => {
         const oa = res.data.filter((q) => q.type === 'OA')
         const interview = res.data.filter((q) => q.type === 'INTERVIEW')

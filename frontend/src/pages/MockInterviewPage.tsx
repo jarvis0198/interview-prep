@@ -26,10 +26,10 @@ export default function MockInterviewPage() {
 
   useEffect(() => {
     if (!sessionId) return
-    questionsApi.getBySession(Number(sessionId)).then((res) => {
-      setQuestions(res.data)
-      setLoading(false)
-    })
+    questionsApi.getBySession(Number(sessionId))
+      .then((res) => { setQuestions(res.data) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [sessionId])
 
   useEffect(() => {
