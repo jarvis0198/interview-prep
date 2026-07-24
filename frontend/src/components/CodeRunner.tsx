@@ -62,15 +62,34 @@ interface Props {
   questionId: number
   questionText?: string
   onAllPassed?: () => void
+  hideTestCases?: boolean
 }
 
 function normalise(s: string) {
   return s.trim().replace(/\r\n/g, '\n').replace(/\n+$/, '')
 }
 
-export default function CodeRunner({ questionId, questionText, onAllPassed }: Props) {
+function storageKey(questionId: number, langId: string) {
+  return `code_runner_${questionId}_${langId}`
+}
+
+function loadSaved(questionId: number, lang: Language): string {
+  try {
+    return localStorage.getItem(storageKey(questionId, lang.id)) ?? lang.starter
+  } catch {
+    return lang.starter
+  }
+}
+
+function saveCode(questionId: number, langId: string, code: string) {
+  try {
+    localStorage.setItem(storageKey(questionId, langId), code)
+  } catch {}
+}
+
+export default function CodeRunner({ questionId, questionText, onAllPassed, hideTestCases }: Props) {
   const [lang, setLang] = useState<Language>(LANGUAGES[0])
-  const [code, setCode] = useState(LANGUAGES[0].starter)
+  const [code, setCode] = useState(() => loadSaved(questionId, LANGUAGES[0]))
   const [testCases, setTestCases] = useState<TestCase[]>([])
   const [loadingCases, setLoadingCases] = useState(false)
   const [results, setResults] = useState<Record<number, CaseResult>>({})
@@ -81,11 +100,11 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
   const [customOutput, setCustomOutput] = useState<string | null>(null)
   const [customError, setCustomError] = useState<string | null>(null)
   const [runningCustom, setRunningCustom] = useState(false)
-  const [tab, setTab] = useState<'testcases' | 'custom'>('testcases')
+  const [tab, setTab] = useState<'testcases' | 'custom'>(hideTestCases ? 'custom' : 'testcases')
 
-  // Load test cases
+  // Load test cases (skip when hideTestCases is set — e.g. company questions page)
   useEffect(() => {
-    if (!questionId) return
+    if (!questionId || hideTestCases) return
     setLoadingCases(true)
     questionsApi.getTestCases(questionId)
       .then(res => {
@@ -102,7 +121,7 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
 
   const switchLang = (l: Language) => {
     setLang(l)
-    setCode(l.starter)
+    setCode(loadSaved(questionId, l))
     setResults({})
     setCustomOutput(null)
     setCustomError(null)
@@ -217,16 +236,18 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
           </div>
         </div>
 
-        <button onClick={() => { setCode(lang.starter); setResults({}) }}
+        <button onClick={() => { setCode(lang.starter); saveCode(questionId, lang.id, lang.starter); setResults({}) }}
           className="p-1.5 text-gray-500 hover:text-white hover:bg-gray-700 rounded-lg transition-colors" title="Reset">
           <RotateCcw size={13} />
         </button>
 
         {/* Run All Tests */}
-        <button onClick={runAll} disabled={runningAll || loadingCases || testCases.length === 0}
-          className="flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors">
-          {runningAll ? <><Loader2 size={13} className="animate-spin" /> Running…</> : <><FlaskConical size={13} /> Run Tests</>}
-        </button>
+        {!hideTestCases && (
+          <button onClick={runAll} disabled={runningAll || loadingCases || testCases.length === 0}
+            className="flex items-center gap-1.5 text-xs font-semibold bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-lg transition-colors">
+            {runningAll ? <><Loader2 size={13} className="animate-spin" /> Running…</> : <><FlaskConical size={13} /> Run Tests</>}
+          </button>
+        )}
       </div>
 
       {/* Editor */}
@@ -234,7 +255,11 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
         height="320px"
         language={lang.monaco}
         value={code}
-        onChange={v => setCode(v ?? '')}
+        onChange={v => {
+          const newCode = v ?? ''
+          setCode(newCode)
+          saveCode(questionId, lang.id, newCode)
+        }}
         theme="vs-dark"
         options={{
           fontSize: 13,
@@ -255,18 +280,20 @@ export default function CodeRunner({ questionId, questionText, onAllPassed }: Pr
       <div className="border-t border-gray-800">
         {/* Tab bar */}
         <div className="flex items-center gap-1 px-3 pt-2 pb-0 border-b border-gray-800">
-          <button onClick={() => setTab('testcases')}
-            className={clsx('px-3 py-1.5 text-xs font-medium rounded-t-lg transition-colors flex items-center gap-1.5',
-              tab === 'testcases' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-300')}>
-            <FlaskConical size={12} />
-            Test Cases
-            {anyRun && (
-              <span className={clsx('text-xs px-1.5 py-0.5 rounded-full font-bold',
-                allPassed ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-300')}>
-                {passCount}/{testCases.length}
-              </span>
-            )}
-          </button>
+          {!hideTestCases && (
+            <button onClick={() => setTab('testcases')}
+              className={clsx('px-3 py-1.5 text-xs font-medium rounded-t-lg transition-colors flex items-center gap-1.5',
+                tab === 'testcases' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-300')}>
+              <FlaskConical size={12} />
+              Test Cases
+              {anyRun && (
+                <span className={clsx('text-xs px-1.5 py-0.5 rounded-full font-bold',
+                  allPassed ? 'bg-green-900 text-green-300' : 'bg-gray-700 text-gray-300')}>
+                  {passCount}/{testCases.length}
+                </span>
+              )}
+            </button>
+          )}
           <button onClick={() => setTab('custom')}
             className={clsx('px-3 py-1.5 text-xs font-medium rounded-t-lg transition-colors flex items-center gap-1.5',
               tab === 'custom' ? 'bg-gray-800 text-white' : 'text-gray-500 hover:text-gray-300')}>

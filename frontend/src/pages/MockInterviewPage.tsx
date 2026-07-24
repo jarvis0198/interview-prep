@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { questionsApi } from '../services/api'
 import type { Question } from '../types'
-import { Mic, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Timer, Trophy, Code2 } from 'lucide-react'
+import { Mic, ChevronRight, ChevronLeft, CheckCircle2, Loader2, Timer, Trophy } from 'lucide-react'
 import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import CodeRunner from '../components/CodeRunner'
@@ -22,13 +22,12 @@ export default function MockInterviewPage() {
   const [timerActive, setTimerActive] = useState(false)
   const [answers, setAnswers] = useState<Record<number, { answer: string; feedback: string }>>({})
   const [done, setDone] = useState(false)
-  const [showCode, setShowCode] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
     if (!sessionId) return
     questionsApi.getBySession(Number(sessionId)).then((res) => {
-      setQuestions(res.data.filter((q) => q.type === 'INTERVIEW'))
+      setQuestions(res.data)
       setLoading(false)
     })
   }, [sessionId])
@@ -74,7 +73,6 @@ export default function MockInterviewPage() {
     setFeedback(answers[current + 1]?.feedback ?? null)
     setTimeLeft(TIMER_SECONDS)
     setTimerActive(false)
-    setShowCode(false)
   }
 
   const handlePrev = () => {
@@ -84,7 +82,6 @@ export default function MockInterviewPage() {
     setFeedback(answers[current - 1]?.feedback ?? null)
     setTimeLeft(TIMER_SECONDS)
     setTimerActive(false)
-    setShowCode(false)
   }
 
   const timerColor = timeLeft > 60 ? 'text-green-600' : timeLeft > 30 ? 'text-yellow-600' : 'text-red-600'
@@ -95,7 +92,7 @@ export default function MockInterviewPage() {
   if (loading) return <div className="text-center py-20 text-gray-400">Loading questions...</div>
   if (questions.length === 0) return (
     <div className="text-center py-20 text-gray-400">
-      <p>No interview questions in this session.</p>
+      <p>No questions in this session.</p>
       <button onClick={() => navigate('/history')} className="btn-primary mt-4">Back to History</button>
     </div>
   )
@@ -115,6 +112,7 @@ export default function MockInterviewPage() {
   )
 
   const q = questions[current]
+  const isOA = q.type === 'OA'
 
   return (
     <div className="max-w-2xl mx-auto space-y-5">
@@ -143,29 +141,34 @@ export default function MockInterviewPage() {
             <div className="flex gap-2 flex-wrap">
               <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{q.category}</span>
               {q.difficulty && <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded">{q.difficulty}</span>}
+              {isOA && <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded font-medium">DSA / Coding</span>}
             </div>
             <p className="text-base font-medium text-gray-800 leading-relaxed">{q.questionText}</p>
           </div>
-          <div className="shrink-0 text-right">
-            <div className={clsx('text-lg font-mono font-bold', timerColor)}>{mins}:{secs}</div>
-            {!timerActive && !feedback && (
-              <button onClick={startTimer} className="text-xs text-primary-600 hover:underline flex items-center gap-1 mt-1">
-                <Timer size={12} /> Start timer
-              </button>
-            )}
-          </div>
+          {!isOA && (
+            <div className="shrink-0 text-right">
+              <div className={clsx('text-lg font-mono font-bold', timerColor)}>{mins}:{secs}</div>
+              {!timerActive && !feedback && (
+                <button onClick={startTimer} className="text-xs text-primary-600 hover:underline flex items-center gap-1 mt-1">
+                  <Timer size={12} /> Start timer
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
-        <textarea
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          placeholder="Type your answer here..."
-          disabled={!!feedback}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none disabled:bg-gray-50 disabled:text-gray-500"
-          rows={6}
-        />
+        {!isOA && (
+          <textarea
+            value={answer}
+            onChange={(e) => setAnswer(e.target.value)}
+            placeholder="Type your answer here..."
+            disabled={!!feedback}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-300 resize-none disabled:bg-gray-50 disabled:text-gray-500"
+            rows={6}
+          />
+        )}
 
-        {!feedback && (
+        {!isOA && !feedback && (
           <button onClick={handleSubmit} disabled={!answer.trim() || loadingFeedback}
             className="btn-primary w-full flex items-center justify-center gap-2">
             {loadingFeedback ? <><Loader2 size={15} className="animate-spin" /> Getting feedback...</> : <><CheckCircle2 size={15} /> Submit Answer</>}
@@ -173,28 +176,16 @@ export default function MockInterviewPage() {
         )}
       </div>
 
-      {/* Code runner toggle */}
-      <div>
-        <button
-          onClick={() => setShowCode(v => !v)}
-          className={clsx(
-            'flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg border transition-colors',
-            showCode
-              ? 'bg-green-50 text-green-700 border-green-200'
-              : 'bg-white text-gray-500 border-gray-200 hover:border-green-300 hover:text-green-600'
-          )}
-        >
-          <Code2 size={15} />
-          {showCode ? 'Hide Code Runner' : 'Open Code Runner'}
-        </button>
-        {showCode && (
-          <div className="mt-3">
-            <CodeRunner questionId={q.id} questionText={q.questionText} />
-          </div>
-        )}
-      </div>
+      {/* DSA: always-open code runner */}
+      {isOA && (
+        <CodeRunner
+          questionId={q.id}
+          questionText={q.questionText}
+          hideTestCases
+        />
+      )}
 
-      {feedback && (
+      {!isOA && feedback && (
         <div className="card space-y-2">
           <h3 className="font-semibold text-gray-700 text-sm">AI Feedback</h3>
           <div className="prose prose-sm max-w-none text-xs prose-headings:text-gray-700 prose-headings:text-sm prose-code:bg-gray-100 prose-code:px-1 prose-code:rounded">

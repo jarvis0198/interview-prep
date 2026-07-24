@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { questionsApi } from '../services/api'
 import type { PrepSession } from '../types'
 import { useNavigate } from 'react-router-dom'
-import { Building2, Calendar, ChevronRight, History, Briefcase, Trash2, Mic } from 'lucide-react'
+import { Building2, Calendar, ChevronRight, History, Briefcase, Trash2, Mic, Search, Code2, MessageSquare } from 'lucide-react'
 import { SessionSkeleton } from '../components/Skeleton'
 
 export default function HistoryPage() {
   const [sessions, setSessions] = useState<PrepSession[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [search, setSearch] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -18,6 +19,15 @@ export default function HistoryPage() {
       .catch(() => setError('Failed to load sessions.'))
       .finally(() => setLoading(false))
   }, [])
+
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    if (!q) return sessions
+    return sessions.filter(s =>
+      s.companyName.toLowerCase().includes(q) ||
+      (s.targetRole ?? '').toLowerCase().includes(q)
+    )
+  }, [sessions, search])
 
   const handleDelete = async (e: React.MouseEvent, id: number) => {
     e.stopPropagation()
@@ -45,13 +55,26 @@ export default function HistoryPage() {
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-        <History size={24} />
-        Prep History
+      <div className="flex items-center gap-3 flex-wrap">
+        <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+          <History size={24} />
+          Prep History
+          {sessions.length > 0 && (
+            <span className="text-sm font-normal text-gray-400">— {sessions.length} sessions</span>
+          )}
+        </h1>
         {sessions.length > 0 && (
-          <span className="text-sm font-normal text-gray-400">— {sessions.length} sessions</span>
+          <div className="relative ml-auto">
+            <Search size={14} className="absolute left-2.5 top-2.5 text-gray-400" />
+            <input
+              className="input pl-8 py-2 text-sm w-52"
+              placeholder="Search company or role…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
         )}
-      </h1>
+      </div>
 
       {sessions.length === 0 ? (
         <div className="card text-center py-16 text-gray-400">
@@ -65,9 +88,14 @@ export default function HistoryPage() {
             Generate Questions
           </button>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="card text-center py-12 text-gray-400">
+          <p className="text-sm">No sessions match "{search}".</p>
+          <button onClick={() => setSearch('')} className="text-xs text-primary-600 mt-1 hover:underline">Clear search</button>
+        </div>
       ) : (
         <div className="space-y-2">
-          {sessions.map((s) => (
+          {filtered.map((s) => (
             <div
               key={s.id}
               onClick={() => navigate(`/questions/${s.id}`)}
@@ -83,6 +111,20 @@ export default function HistoryPage() {
                     <Briefcase size={12} />
                     {s.targetRole}
                   </p>
+                )}
+                {(s.oaCount !== undefined || s.interviewCount !== undefined) && (
+                  <div className="flex items-center gap-2 mt-1">
+                    {(s.oaCount ?? 0) > 0 && (
+                      <span className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                        <Code2 size={10} /> {s.oaCount} DSA
+                      </span>
+                    )}
+                    {(s.interviewCount ?? 0) > 0 && (
+                      <span className="flex items-center gap-1 text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full font-medium">
+                        <MessageSquare size={10} /> {s.interviewCount} Interview
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
               <div className="text-right shrink-0">

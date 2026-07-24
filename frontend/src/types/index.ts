@@ -34,6 +34,8 @@ export interface PrepSession {
   targetRole?: string
   resumeId: number
   createdAt: string
+  oaCount?: number
+  interviewCount?: number
 }
 
 export interface Question {

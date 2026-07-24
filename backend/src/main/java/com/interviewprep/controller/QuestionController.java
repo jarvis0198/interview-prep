@@ -4,7 +4,7 @@ import com.interviewprep.dto.GenerateQuestionsRequest;
 import com.interviewprep.dto.GenerateQuestionsResponse;
 import com.interviewprep.dto.MockInterviewRequest;
 import com.interviewprep.dto.QuestionDto;
-import com.interviewprep.entity.PrepSession;
+import com.interviewprep.dto.SessionSummaryDto;
 import com.interviewprep.entity.User;
 import com.interviewprep.service.CompanyGithubService;
 import com.interviewprep.service.QuestionService;
@@ -44,7 +44,7 @@ public class QuestionController {
     }
 
     @GetMapping("/sessions")
-    public ResponseEntity<List<PrepSession>> getSessions(@AuthenticationPrincipal User user) {
+    public ResponseEntity<List<SessionSummaryDto>> getSessions(@AuthenticationPrincipal User user) {
         return ResponseEntity.ok(questionService.getAllSessions(user));
     }
 

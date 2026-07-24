@@ -6,6 +6,7 @@ import com.interviewprep.dto.GenerateQuestionsRequest;
 import com.interviewprep.dto.GenerateQuestionsResponse;
 import com.interviewprep.dto.MockInterviewRequest;
 import com.interviewprep.dto.QuestionDto;
+import com.interviewprep.dto.SessionSummaryDto;
 import com.interviewprep.entity.PrepSession;
 import com.interviewprep.entity.Question;
 import com.interviewprep.entity.Resume;
@@ -312,8 +313,13 @@ public class QuestionService {
                 .stream().map(QuestionDto::from).toList();
     }
 
-    public List<PrepSession> getAllSessions(User user) {
-        return sessionRepository.findByResumeUserOrderByCreatedAtDesc(user);
+    public List<SessionSummaryDto> getAllSessions(User user) {
+        List<PrepSession> sessions = sessionRepository.findByResumeUserOrderByCreatedAtDesc(user);
+        return sessions.stream().map(s -> SessionSummaryDto.from(
+                s,
+                questionRepository.countBySessionIdAndType(s.getId(), Question.QuestionType.OA),
+                questionRepository.countBySessionIdAndType(s.getId(), Question.QuestionType.INTERVIEW)
+        )).toList();
     }
 
     public Map<String, String> getFeedback(Long questionId, String userAnswer) {

@@ -8,4 +8,5 @@ import java.util.List;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
     List<Question> findBySessionId(Long sessionId);
     List<Question> findBySessionIdAndType(Long sessionId, Question.QuestionType type);
+    long countBySessionIdAndType(Long sessionId, Question.QuestionType type);
 }

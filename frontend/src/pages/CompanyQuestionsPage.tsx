@@ -2,9 +2,10 @@ import { useState, useEffect, useMemo } from 'react'
 import { questionsApi } from '../services/api'
 import type { GithubQuestion } from '../types'
 import {
-  Building2, ExternalLink, Search, AlertCircle, Loader2, Github
+  Building2, ExternalLink, Search, AlertCircle, Loader2, Github, Code2
 } from 'lucide-react'
 import clsx from 'clsx'
+import CodeRunner from '../components/CodeRunner'
 
 const TOP_COMPANIES = [
   'Google', 'Amazon', 'Microsoft', 'Meta', 'Apple',
@@ -30,6 +31,7 @@ export default function CompanyQuestionsPage() {
   const [companySearch, setCompanySearch] = useState('')
   const [showAllCompanies, setShowAllCompanies] = useState(false)
   const [showTopOnly, setShowTopOnly] = useState(true)
+  const [practiceUrl, setPracticeUrl] = useState<string | null>(null)
 
   useEffect(() => {
     questionsApi.getGithubCompanies()
@@ -44,6 +46,7 @@ export default function CompanyQuestionsPage() {
     setQuestions([])
     setSearch('')
     setError('')
+    setPracticeUrl(null)
     setLoadingQuestions(true)
     try {
       const r = await questionsApi.getGithubQuestions(company)
@@ -204,42 +207,67 @@ export default function CompanyQuestionsPage() {
               ) : (
                 <div className="divide-y divide-gray-100 border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm">
                   {/* Table header */}
-                  <div className="grid grid-cols-[2rem_1fr_auto_auto] gap-4 px-4 py-2.5 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <div className="grid grid-cols-[2rem_1fr_auto_auto_auto] gap-4 px-4 py-2.5 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     <span>#</span>
                     <span>Problem</span>
                     <span className="text-right">Frequency</span>
                     <span></span>
+                    <span></span>
                   </div>
                   {filteredQuestions.map(q => {
                     const freq = occurrenceLabel(q.occurrences)
+                    const isPracticing = practiceUrl === q.url
+                    const syntheticId = Math.abs(q.url.split('/').pop()?.split('-').reduce((acc, s) => acc * 31 + s.charCodeAt(0), 0) ?? 0) % 1000000
                     return (
-                      <div
-                        key={q.url}
-                        className="grid grid-cols-[2rem_1fr_auto_auto] gap-4 px-4 py-3 items-center hover:bg-gray-50 transition-colors group"
-                      >
-                        <span className="text-xs text-gray-400 font-mono">{q.rank}</span>
-                        <div className="min-w-0">
-                          <span className="text-sm font-medium text-gray-800 group-hover:text-primary-700 transition-colors">
-                            {q.title}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          {q.occurrences > 1 && (
-                            <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', freq.color)}>
-                              ×{q.occurrences}
-                            </span>
-                          )}
-                        </div>
-                        <a
-                          href={q.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-1 rounded-lg transition-colors"
-                          title="Open on LeetCode"
+                      <div key={q.url}>
+                        <div
+                          className="grid grid-cols-[2rem_1fr_auto_auto_auto] gap-4 px-4 py-3 items-center hover:bg-gray-50 transition-colors group"
                         >
-                          <span className="hidden sm:inline">LC</span>
-                          <ExternalLink size={11} />
-                        </a>
+                          <span className="text-xs text-gray-400 font-mono">{q.rank}</span>
+                          <div className="min-w-0">
+                            <span className="text-sm font-medium text-gray-800 group-hover:text-primary-700 transition-colors">
+                              {q.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {q.occurrences > 1 && (
+                              <span className={clsx('text-xs px-2 py-0.5 rounded-full font-medium', freq.color)}>
+                                ×{q.occurrences}
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => setPracticeUrl(isPracticing ? null : q.url)}
+                            className={clsx(
+                              'shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-lg border transition-colors',
+                              isPracticing
+                                ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100'
+                                : 'text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-green-700 hover:border-green-200'
+                            )}
+                          >
+                            <Code2 size={11} />
+                            <span className="hidden sm:inline">{isPracticing ? 'Close' : 'Practice'}</span>
+                          </button>
+                          <a
+                            href={q.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 flex items-center gap-1 text-xs font-medium text-orange-600 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-1 rounded-lg transition-colors"
+                            title="Open on LeetCode"
+                          >
+                            <span className="hidden sm:inline">LC</span>
+                            <ExternalLink size={11} />
+                          </a>
+                        </div>
+                        {isPracticing && (
+                          <div className="px-4 pb-4 bg-gray-50 border-t border-gray-100">
+                            <CodeRunner
+                              questionId={syntheticId}
+                              questionText={q.title}
+                              hideTestCases
+                            />
+                          </div>
+                        )}
                       </div>
                     )
                   })}
